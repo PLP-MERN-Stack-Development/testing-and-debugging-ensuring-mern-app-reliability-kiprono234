@@ -8,6 +8,15 @@ const Post = require('../../src/models/Post');
 const User = require('../../src/models/User');
 const { generateToken } = require('../../src/utils/auth');
 
+console.log('Test file loaded - checking ObjectId usage');
+console.log('Mongoose version:', mongoose.version);
+try {
+  const testId = new mongoose.Types.ObjectId();
+  console.log('ObjectId creation works:', testId);
+} catch (e) {
+  console.log('ObjectId creation error:', e.message);
+}
+
 let mongoServer;
 let token;
 let userId;
@@ -33,7 +42,8 @@ beforeAll(async () => {
     title: 'Test Post',
     content: 'This is a test post content',
     author: userId,
-    category: mongoose.Types.ObjectId(),
+    category: new mongoose.Types.ObjectId(),
+
     slug: 'test-post',
   });
   postId = post._id;
@@ -62,7 +72,7 @@ describe('POST /api/posts', () => {
     const newPost = {
       title: 'New Test Post',
       content: 'This is a new test post content',
-      category: mongoose.Types.ObjectId().toString(),
+      category: new mongoose.Types.ObjectId().toString(),
     };
 
     const res = await request(app)
@@ -74,14 +84,14 @@ describe('POST /api/posts', () => {
     expect(res.body).toHaveProperty('_id');
     expect(res.body.title).toBe(newPost.title);
     expect(res.body.content).toBe(newPost.content);
-    expect(res.body.author).toBe(userId.toString());
+    expect(res.body.author._id).toBe(userId.toString());
   });
 
   it('should return 401 if not authenticated', async () => {
     const newPost = {
       title: 'Unauthorized Post',
       content: 'This should not be created',
-      category: mongoose.Types.ObjectId().toString(),
+      category: new mongoose.Types.ObjectId().toString(),
     };
 
     const res = await request(app)
@@ -95,7 +105,7 @@ describe('POST /api/posts', () => {
     const invalidPost = {
       // Missing title
       content: 'This post is missing a title',
-      category: mongoose.Types.ObjectId().toString(),
+      category: new mongoose.Types.ObjectId().toString(),
     };
 
     const res = await request(app)
@@ -118,7 +128,7 @@ describe('GET /api/posts', () => {
   });
 
   it('should filter posts by category', async () => {
-    const categoryId = mongoose.Types.ObjectId().toString();
+    const categoryId = new mongoose.Types.ObjectId().toString();
     
     // Create a post with specific category
     await Post.create({
@@ -146,7 +156,7 @@ describe('GET /api/posts', () => {
         title: `Pagination Post ${i}`,
         content: `Content for pagination test ${i}`,
         author: userId,
-        category: mongoose.Types.ObjectId(),
+        category: new mongoose.Types.ObjectId(),
         slug: `pagination-post-${i}`,
       });
     }
@@ -177,7 +187,7 @@ describe('GET /api/posts/:id', () => {
   });
 
   it('should return 404 for non-existent post', async () => {
-    const nonExistentId = mongoose.Types.ObjectId();
+    const nonExistentId = new mongoose.Types.ObjectId();
     const res = await request(app)
       .get(`/api/posts/${nonExistentId}`);
 
